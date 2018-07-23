@@ -1,0 +1,18 @@
+{
+  "deploy_settings": {
+    "default": {
+      "skill_id": "amzn1.ask.skill.f1b587b7-62db-4d6b-8212-45e783595a97",
+      "was_cloned": false,
+      "resources": {
+        "manifest": {
+          "eTag": "2ca26aa8fb565e09a1f46c5df8af410e"
+        },
+        "interactionModel": {
+          "en-US": {
+            "eTag": "1adac61f841663839aac9005c0933807"
+          }
+        }
+      }
+    }
+  }
+}
