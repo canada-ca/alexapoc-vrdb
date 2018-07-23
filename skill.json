@@ -3,19 +3,21 @@
     "publishingInformation": {
       "locales": {
         "en-US": {
-          "summary": "Sample Short Description",
+          "summary": "Transport Canada can provide recall information about your vehicles.",
           "examplePhrases": [
-            "Alexa open hello world",
-            "Alexa tell hello world hello",
-            "Alexa ask hello world say hello"
+            "Alexa, open Transport Canada",
+            ""
           ],
-          "name": "alexapoc-vrdb",
-          "description": "Sample Full Description"
+          "keywords": [],
+          "name": "Transport Canada",
+          "smallIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/9dbe/4ddd673e28d34bf1a6f29ed110029e73/APP_ICON?versionId=Hu8wl4NnwOCmdbfKVGSIug19CCztGzEf&AWSAccessKeyId=AKIAIEYXX6DHY7O4XWMA&Expires=1532461628&Signature=B4atsHu11iKkKTD8jL6cR7EgSqQ%3D",
+          "description": "Transport Canada can provide recall information about your vehicles.",
+          "largeIconUri": "https://s3.amazonaws.com/CAPS-SSE/echo_developer/e8d7/e6f669df3ea04ceb8a416db1348ac5a1/APP_ICON_LARGE?versionId=z3PJynLojLvVuMk2spI2KX32jXsjPw2I&AWSAccessKeyId=AKIAIEYXX6DHY7O4XWMA&Expires=1532461628&Signature=hAr5Vh%2Fidk%2Fx370UxT%2F1MoULTfE%3D"
         }
       },
       "isAvailableWorldwide": true,
-      "testingInstructions": "Sample Testing Instructions.",
-      "category": "EDUCATION_AND_REFERENCE",
+      "testingInstructions": "none",
+      "category": "NEWS",
       "distributionCountries": []
     },
     "apis": {
@@ -25,6 +27,13 @@
         }
       }
     },
-    "manifestVersion": "1.0"
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "isChildDirected": false,
+      "usesPersonalInfo": false
+    }
   }
 }

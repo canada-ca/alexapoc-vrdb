@@ -1,41 +1,232 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "greeter",
-      "types": [
-
-      ],
+      "invocationName": "transport canada",
       "intents": [
         {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
           "name": "AMAZON.CancelIntent",
-          "samples": [
-
-          ]
+          "samples": []
         },
         {
           "name": "AMAZON.HelpIntent",
-          "samples": [
-
-          ]
+          "samples": []
         },
         {
           "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "SearchByVehicle",
+          "slots": [
+            {
+              "name": "Make",
+              "type": "MakeType",
+              "samples": [
+                "It's a {Make}",
+                "{Make}"
+              ]
+            },
+            {
+              "name": "Model",
+              "type": "ModelType",
+              "samples": [
+                "It's an {Model}",
+                "It's a {Model}",
+                "{Model}"
+              ]
+            },
+            {
+              "name": "Year",
+              "type": "AMAZON.NUMBER",
+              "samples": [
+                "It's a {Year} model",
+                "It's {Year}",
+                "{Year}"
+              ]
+            }
+          ],
           "samples": [
-
+            "search for {Make} {Model} {Year}",
+            "search by vehicle"
           ]
         },
         {
-          "name": "HelloWorldIntent",
+          "name": "LatestUpdates",
+          "samples": [
+            "what's new",
+            "any updates",
+            "latest updates",
+            "get latest update on my vehicle"
+          ]
+        },
+        {
+          "name": "SaveToFavorites",
           "slots": [
-
+            {
+              "name": "YesNo",
+              "type": "YesNoType"
+            }
           ],
           "samples": [
-            "hello",
-            "say hello",
-            "say hello world"
+            "{YesNo}"
+          ]
+        },
+        {
+          "name": "IWantDetails",
+          "slots": [
+            {
+              "name": "Component",
+              "type": "ComponentType"
+            }
+          ],
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "values": [
+            {
+              "name": {
+                "value": "Honda"
+              }
+            }
+          ],
+          "name": "MakeType"
+        },
+        {
+          "values": [
+            {
+              "name": {
+                "value": "Accord"
+              }
+            }
+          ],
+          "name": "ModelType"
+        },
+        {
+          "values": [
+            {
+              "name": {
+                "value": "No",
+                "synonyms": [
+                  "nine",
+                  "no",
+                  "please don't"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "Yes",
+                "synonyms": [
+                  "si",
+                  "oui",
+                  "yes",
+                  "Please do"
+                ]
+              }
+            }
+          ],
+          "name": "YesNoType"
+        },
+        {
+          "values": [
+            {
+              "name": {
+                "value": "Engine"
+              }
+            },
+            {
+              "name": {
+                "value": "PowerTrain"
+              }
+            }
+          ],
+          "name": "ComponentType"
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "SearchByVehicle",
+          "confirmationRequired": false,
+          "slots": [
+            {
+              "name": "Make",
+              "type": "MakeType",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.1048673262372.905804952295"
+              }
+            },
+            {
+              "name": "Model",
+              "type": "ModelType",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.1048673262372.871168647169"
+              }
+            },
+            {
+              "name": "Year",
+              "type": "AMAZON.NUMBER",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.1048673262372.865972876744"
+              }
+            }
+          ]
+        },
+        {
+          "name": "IWantDetails",
+          "confirmationRequired": false,
+          "slots": [
+            {
+              "name": "Component",
+              "type": "ComponentType",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            }
           ]
         }
       ]
-    }
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.1048673262372.905804952295",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": " What is the make of the vehicle?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.1048673262372.871168647169",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "What is the model of the vehicle?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.1048673262372.865972876744",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "What year is the vehicle?"
+          }
+        ]
+      }
+    ]
   }
 }
