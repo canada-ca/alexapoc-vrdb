@@ -8,12 +8,15 @@ const LaunchRequestHandler = {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const speechText = 'Welcome to the Alexa Skills Kit, you can say hello!';
+    const userOptions = " You can say search by vehicle";
+
+    var speechText = 'Welcome to Transport Canada, I can inform you  about vehicle recalls.';
+        speechText += userOptions;
 
     return handlerInput.responseBuilder
       .speak(speechText)
-      .reprompt(speechText)
-      .withSimpleCard('Hello World', speechText)
+      .reprompt(userOptions)
+      .withSimpleCard('Search Options', "Search by vehicle")
       .getResponse();
   },
 };
