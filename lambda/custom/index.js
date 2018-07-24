@@ -39,7 +39,7 @@ const InProgressSearchByVehicleIntentHandler = {
 
 
     for (const slotName in currentIntent.slots) {
-      speechText+= currentIntent.slots[slotName].value;
+      //speechText+= currentIntent.slots[slotName].value;
       console.log(slotName)
 
 
@@ -56,54 +56,10 @@ const InProgressSearchByVehicleIntentHandler = {
           .getResponse();
       }
       console.log(currentSlot);
-      if (Object.prototype.hasOwnProperty.call(currentIntent.slots, slotName)) {
-  
-        // console.log(currentSlot.resolutions );
-        // console.log(currentSlot.resolutions.resolutionsPerAuthority[0]);
-        // console.log(currentSlot.resolutions.resolutionsPerAuthority[0].status.code );
-        // console.log(currentSlot.resolutions.resolutionsPerAuthority[0].values.length  );
-        // console.log(currentSlot.confirmationStatus );
-
-
-
-
-        // // // // if (currentSlot.confirmationStatus !== 'CONFIRMED'){
-        // // // //   // && currentSlot.resolutions
-        // // // //   // && currentSlot.resolutions.resolutionsPerAuthority[0]) {
-        // // // //   // if (currentSlot.resolutions.resolutionsPerAuthority[0].status.code === 'ER_SUCCESS_MATCH') {
-        // // // //     // if (currentSlot.resolutions.resolutionsPerAuthority[0].values.length > 1) {
-        // // // //       prompt = 'Which would you like';
-        // // // //       const size = currentSlot.resolutions.resolutionsPerAuthority[0].values.length;
-        // // // //       speechText = "inside most inner if statement"
-
-        // // // //       currentSlot.resolutions.resolutionsPerAuthority[0].values
-        // // // //         .forEach((element, index) => {
-        // // // //           prompt += ` ${(index === size - 1) ? ' or' : ' '} ${element.value.name}`;
-        // // // //         });
-
-        // // // //       prompt += '?';
-
-        // // // //       return handlerInput.responseBuilder
-        // // // //         .speak(prompt)
-        // // // //         .reprompt(prompt)
-        // // // //         .addElicitSlotDirective(currentSlot.name)
-        // // // //         .getResponse();
-        // // // //     // }
-        // // // //   } else if (currentSlot.resolutions.resolutionsPerAuthority[0].status.code === 'ER_SUCCESS_NO_MATCH') {
-        // // // //     if (requiredSlots.indexOf(currentSlot.name) > -1) {
-        // // // //       prompt = `What ${currentSlot.name} are you looking for`;
-
-        // // // //       return handlerInput.responseBuilder
-        // // // //         .speak(prompt)
-        // // // //         .reprompt(prompt)
-        // // // //         .addElicitSlotDirective(currentSlot.name)
-        // // // //         .getResponse();
-        // // // //     }
-        // // // //   }
-        // // // // }
-      }
     }
 
+    speechText="Okay, I'll be looking for ";
+    speechText+=currentIntent.slots['Make'].value + "," + currentIntent.slots['Model'].value + "," + currentIntent.slots['Year'].value;
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Hello World', speechText)
