@@ -2,6 +2,68 @@
 /* eslint-disable  no-console */
 
 const Alexa = require('ask-sdk-core');
+const https = require('https');
+const fetch = require('node-fetch');
+const HOST = 'http://www.data.tc.gc.ca';
+const PATH = '/v1.3/api/eng/vehicle-recall-database/recall';
+const SUFFIX ='?format=json';
+const COUNT ='/count';
+const MAKENAME='/make-name/';
+const MODELNAME ='/model-name/';
+const YEARRANGE ='/year-range/';
+
+fetch('http://healthycanadians.gc.ca/recall-alert-rappel-avis/api/recent/en')
+.then(res=> res.json())
+.then(json=> console.log(json));
+
+
+const LookUpVehicleRecall = function(make,model,year) {
+  httpsGet(make,model,year,(recallCount) => {
+      // this.response.speak(`The current price is ${prices.USD.selling}`);
+      // this.emit(':responseReady'); 
+      console.log("inside httpsget")
+      return recallCount;
+  });
+}
+
+function httpsGet(make, model, year, callback) {
+
+  // GET is a web service request that is fully defined by a URL string
+  // Try GET in your browser:
+
+  // Update these options with the details of the web service you would like to call
+  var options = {
+      host: HOST,
+      path: PATH + MAKENAME + make.toLowerCase() + MODELNAME + model.toLowerCase() + YEARRANGE + year + '-' + year + COUNT + SUFFIX,
+      method: 'GET',
+  };
+
+console.log("options: " +JSON.stringify(options));
+
+  var req = https.request(options, res => {
+      
+      res.setEncoding('utf8');
+      var returnData = "";
+
+      res.on('data', chunk => {
+          returnData = returnData + chunk;
+      });
+
+      res.on('end', () => {
+          var jsonData = JSON.parse(returnData);
+          // this will execute whatever function the caller defined,
+          // and pass the data we received from the webservice call
+          // to it. In your call back you'll need handle the data
+          // and make Alexa speak.
+          console.log("json data: "+jsonData);
+          callback(jsonData);  
+      });
+
+  });
+  req.end();
+}
+
+//console.log(LookUpVehicleRecall('Honda','Accord','2014'));
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -34,7 +96,9 @@ const InProgressSearchByVehicleIntentHandler = {
     let prompt = '';
     var speechText = 'Hello World!';
 
-  
+    var make = currentIntent.slots['Make'].value; 
+    var model = currentIntent.slots['Model'].value; 
+    var year = currentIntent.slots['Year'].value; 
     
 
 
@@ -58,8 +122,10 @@ const InProgressSearchByVehicleIntentHandler = {
       console.log(currentSlot);
     }
 
-    speechText="Okay, I'll be looking for ";
-    speechText+=currentIntent.slots['Make'].value + "," + currentIntent.slots['Model'].value + "," + currentIntent.slots['Year'].value;
+    speechText = "Okay, I'll be looking for ";
+    speechText += make+ "," + model+ "," + year;
+    var count = LookUpVehicleRecall(make,model,year);
+    speechText="I found " + count + " recalls"; 
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Hello World', speechText)
