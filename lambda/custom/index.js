@@ -21,13 +21,80 @@ const LaunchRequestHandler = {
   },
 };
 
-const HelloWorldIntentHandler = {
+
+const InProgressSearchByVehicleIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'HelloWorldIntent';
+      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle';
+      //&& request.dialogState !== 'COMPLETED';
+
+  },
+  handle(handlerInput) {
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    let prompt = '';
+
+    for (const slotName in currentIntent.slots) {
+      if (Object.prototype.hasOwnProperty.call(currentIntent.slots, slotName)) {
+        const currentSlot = currentIntent.slots[slotName];
+        if (currentSlot.confirmationStatus !== 'CONFIRMED'
+          && currentSlot.resolutions
+          && currentSlot.resolutions.resolutionsPerAuthority[0]) {
+          if (currentSlot.resolutions.resolutionsPerAuthority[0].status.code === 'ER_SUCCESS_MATCH') {
+            if (currentSlot.resolutions.resolutionsPerAuthority[0].values.length > 1) {
+              prompt = 'Which would you like';
+              const size = currentSlot.resolutions.resolutionsPerAuthority[0].values.length;
+
+              currentSlot.resolutions.resolutionsPerAuthority[0].values
+                .forEach((element, index) => {
+                  prompt += ` ${(index === size - 1) ? ' or' : ' '} ${element.value.name}`;
+                });
+
+              prompt += '?';
+
+              return handlerInput.responseBuilder
+                .speak(prompt)
+                .reprompt(prompt)
+                .addElicitSlotDirective(currentSlot.name)
+                .getResponse();
+            }
+          } else if (currentSlot.resolutions.resolutionsPerAuthority[0].status.code === 'ER_SUCCESS_NO_MATCH') {
+            if (requiredSlots.indexOf(currentSlot.name) > -1) {
+              prompt = `What ${currentSlot.name} are you looking for`;
+
+              return handlerInput.responseBuilder
+                .speak(prompt)
+                .reprompt(prompt)
+                .addElicitSlotDirective(currentSlot.name)
+                .getResponse();
+            }
+          }
+        }
+      }
+    }
+
+    return handlerInput.responseBuilder
+      .addDelegateDirective(currentIntent)
+      .getResponse();
+  },
+};
+
+
+const SearchByVehicleIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle'
+      && request.dialogState === 'COMPLETED';
+
   },
   handle(handlerInput) {
     const speechText = 'Hello World!';
+
+        console.log("inside vehicle handler");
+        // // delegate to Alexa to collect all the required slots
+        // let isTestingWithSimulator = true; //autofill slots when 
+        // //using simulator, dialog management is only supported with a device
+        //let filledSlots = delegateSlotCollection.call(this);
+        
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -98,10 +165,11 @@ const skillBuilder = Alexa.SkillBuilders.custom();
 exports.handler = skillBuilder
   .addRequestHandlers(
     LaunchRequestHandler,
-    HelloWorldIntentHandler,
+    SearchByVehicleIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
-    SessionEndedRequestHandler
+    SessionEndedRequestHandler,
+    InProgressSearchByVehicleIntentHandler
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
