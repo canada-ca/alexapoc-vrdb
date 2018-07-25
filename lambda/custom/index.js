@@ -4,66 +4,87 @@
 const Alexa = require('ask-sdk-core');
 const https = require('https');
 const fetch = require('node-fetch');
-const HOST = 'http://www.data.tc.gc.ca';
-const PATH = '/v1.3/api/eng/vehicle-recall-database/recall';
-const SUFFIX ='?format=json';
-const COUNT ='/count';
-const MAKENAME='/make-name/';
-const MODELNAME ='/model-name/';
-const YEARRANGE ='/year-range/';
+const util = require('util');
+const HOST = 'http://data.tc.gc.ca';
+const PATH = '/v1.3/api/eng/vehicle-recall-database/';
+const RECALL = 'recall';
+const SUFFIX = '?format=json';
+const COUNT = '/count';
+const MAKENAME = '/make-name/';
+const MODELNAME = '/model-name/';
+const YEARRANGE = '/year-range/';
+const RECALLSUM = '/recall-summary/';
+const RECALLNUMBER = '/recall-number/';
 
-fetch('http://healthycanadians.gc.ca/recall-alert-rappel-avis/api/recent/en')
-.then(res=> res.json())
-.then(json=> console.log(json));
 
 
-const LookUpVehicleRecall = function(make,model,year) {
-  httpsGet(make,model,year,(recallCount) => {
-      // this.response.speak(`The current price is ${prices.USD.selling}`);
-      // this.emit(':responseReady'); 
-      console.log("inside httpsget")
-      return recallCount;
-  });
+
+
+//'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall/make-name/honda/model-name/accord/year-range/2014-2014/count?format=json
+async function GetVehicleRecallCount(make, model, year) {
+  console.log("inside func");
+  try {
+    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + "-" + year + COUNT + SUFFIX;
+    console.log(url);
+    let res = await fetch(url)
+    res = await res.json();
+    console.log(util.inspect(res, { depth: null }));
+    var count = res.ResultSet[0][0]['Value']['Literal'];
+    console.log("returning: " + count);
+    return count;
+
+  } catch (error) {
+    return 0;
+  }
+
 }
 
-function httpsGet(make, model, year, callback) {
+//'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall/make-name/honda/model-name/accord/year-range/2014-2014?format=json
+async function GetRecallNumber(make, model, year) {
+  console.log("inside func");
+  try {
+    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + "-" + year + SUFFIX;
+    console.log(url);
+    let res = await fetch(url)
+    res = await res.json();
+    console.log(util.inspect(res, { depth: null }));
+    var recallNumber = res.ResultSet[0][0]['Value']['Literal'];
+    console.log("returning recall # : " + recallNumber);
+    return recallNumber;
 
-  // GET is a web service request that is fully defined by a URL string
-  // Try GET in your browser:
+  } catch (error) {
+    return 0;
+  }
 
-  // Update these options with the details of the web service you would like to call
-  var options = {
-      host: HOST,
-      path: PATH + MAKENAME + make.toLowerCase() + MODELNAME + model.toLowerCase() + YEARRANGE + year + '-' + year + COUNT + SUFFIX,
-      method: 'GET',
-  };
-
-console.log("options: " +JSON.stringify(options));
-
-  var req = https.request(options, res => {
-      
-      res.setEncoding('utf8');
-      var returnData = "";
-
-      res.on('data', chunk => {
-          returnData = returnData + chunk;
-      });
-
-      res.on('end', () => {
-          var jsonData = JSON.parse(returnData);
-          // this will execute whatever function the caller defined,
-          // and pass the data we received from the webservice call
-          // to it. In your call back you'll need handle the data
-          // and make Alexa speak.
-          console.log("json data: "+jsonData);
-          callback(jsonData);  
-      });
-
-  });
-  req.end();
 }
 
-//console.log(LookUpVehicleRecall('Honda','Accord','2014'));
+
+
+//http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall-summary/recall-number/1977043?format=json
+async function GetRecallDetails(recallNumber) {
+  console.log("inside func");
+  try {
+    var url = HOST + PATH + RECALLSUM + RECALLNUMBER + recallNumber + SUFFIX;
+    console.log(url)
+
+    let res = await fetch(url)
+    res = await res.json();
+    console.log(util.inspect(res, { depth: null }));
+    var count = res.ResultSet[0][0]['Value']['Literal'];
+    console.log("returning: " + count);
+    return count;
+
+  } catch (error) {
+    return 0;
+  }
+
+}
+
+
+
+
+
+
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -73,7 +94,7 @@ const LaunchRequestHandler = {
     const userOptions = " You can say search by vehicle";
 
     var speechText = 'Welcome to Transport Canada, I can inform you  about vehicle recalls.';
-        speechText += userOptions;
+    speechText += userOptions;
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -86,54 +107,53 @@ const LaunchRequestHandler = {
 
 const InProgressSearchByVehicleIntentHandler = {
   canHandle(handlerInput) {
+    console.log("dialog state: " + handlerInput.requestEnvelope.request.dialogState);
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle';
-      // && request.dialogState !== 'COMPLETED';
+      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle'
+      && handlerInput.requestEnvelope.request.dialogState !== 'COMPLETED';
 
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
+    console.log("inside in progress handle")
+
+    return handlerInput.responseBuilder
+      .addDelegateDirective(handlerInput.requestEnvelope.request.intent) // makes alexa prompt for required slots.
+      .getResponse();
+  }
+};
+
+const CompletedSearchByVehicleIntentHandler = {
+  canHandle(handlerInput) {
+    console.log("dialog state: " + handlerInput.requestEnvelope.request.dialogState);
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle'
+      && handlerInput.requestEnvelope.request.dialogState === 'COMPLETED';
+
+  },
+  async handle(handlerInput) {
+    console.log("inside in completed")
     const currentIntent = handlerInput.requestEnvelope.request.intent;
-    let prompt = '';
-    var speechText = 'Hello World!';
 
-    var make = currentIntent.slots['Make'].value; 
-    var model = currentIntent.slots['Model'].value; 
-    var year = currentIntent.slots['Year'].value; 
-    
+    var make = currentIntent.slots['Make'].value;
+    var model = currentIntent.slots['Model'].value;
+    var year = currentIntent.slots['Year'].value;
 
+    var speechText = "Okay, I'll be looking for ";
+    speechText += make + "," + model + "," + year;
+    var count = await GetVehicleRecallCount(make, model, year);
 
-    for (const slotName in currentIntent.slots) {
-      //speechText+= currentIntent.slots[slotName].value;
-      console.log(slotName)
-
-
-      const currentSlot = currentIntent.slots[slotName];
-        
-      if(!currentIntent.slots[slotName].value)
-      {
-        prompt = `What ${currentSlot.name} is it?`;
-
-        return handlerInput.responseBuilder
-          .speak(prompt)
-          .reprompt(prompt)
-          .addElicitSlotDirective(currentSlot.name)
-          .getResponse();
-      }
-      console.log(currentSlot);
+    if(count>1)
+    {
+      var recallNumber = GetRecallNumber(make,model,year);
+      GetRecallDetails(recallNumber);
     }
 
-    speechText = "Okay, I'll be looking for ";
-    speechText += make+ "," + model+ "," + year;
-    var count = LookUpVehicleRecall(make,model,year);
-    speechText="I found " + count + " recalls"; 
+    console.log("before speach text: " + count);
+    speechText = "I found " + count + " recall" + (count > 1 ? "s" : "");
     return handlerInput.responseBuilder
       .speak(speechText)
-      .withSimpleCard('Hello World', speechText)
+      .withSimpleCard('Recalls Found', speechText)
       .getResponse();
-
-    // return handlerInput.responseBuilder
-    //   .addDelegateDirective(currentIntent)
-    //   .getResponse();
   }
 };
 
@@ -147,17 +167,17 @@ const SearchByVehicleIntentHandler = {
   handle(handlerInput) {
     const speechText = 'Hello World!';
 
-        // console.log("inside vehicle handler");
-        // // // delegate to Alexa to collect all the required slots
-        // // let isTestingWithSimulator = true; //autofill slots when 
-        // // //using simulator, dialog management is only supported with a device
-        // let filledSlots = delegateSlotCollection.call(this);
-        
+    // console.log("inside vehicle handler");
+    // // // delegate to Alexa to collect all the required slots
+    // // let isTestingWithSimulator = true; //autofill slots when 
+    // // //using simulator, dialog management is only supported with a device
+    // let filledSlots = delegateSlotCollection.call(this);
 
-    
-        // if (!filledSlots) {
-        //     return;
-        // }
+
+
+    // if (!filledSlots) {
+    //     return;
+    // }
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -167,28 +187,7 @@ const SearchByVehicleIntentHandler = {
 };
 
 
-// function delegateSlotCollection() {
-//   console.log("inside delegate slot")
-//   let updatedIntent = this.event.request.intent.dialogState;
-//   if (this.event.request.intent.dialogState === "STARTED") {
-//       this.emit(':delegate', updatedIntent);
-//   } else if (this.event.request.intent.dialogState !== "COMPLETED") {
-//       if(this.event.request.intent.slots.purpose.value) {
-//           let prompt = "We have 3 gaming computers on the shelf. ";
-//           prompt +=  "Two premium computers and one cheap one. Which would you like?";
-//           let reprompt = "In stock, we have premium and cheap computers, which would you like?";
-          
-//           this.emit(':elicitSlot', 'budget', prompt, reprompt);                
-//       } else {
-//           this.emit(':delegate', updatedIntent);
-//       }
-//   } else {
-//       // we have collected all of our slots! 
-//       // time to return them
-//       return updatedIntent 
-//   }
-//   return null;
-// }
+
 
 
 const HelpIntentHandler = {
@@ -257,7 +256,8 @@ exports.handler = skillBuilder
     HelpIntentHandler,
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler,
-    InProgressSearchByVehicleIntentHandler 
+    InProgressSearchByVehicleIntentHandler,
+    CompletedSearchByVehicleIntentHandler
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
