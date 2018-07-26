@@ -39,18 +39,32 @@ async function GetVehicleRecallCount(make, model, year) {
 
 }
 
+//todo fix, could return several recalls asscoiated to the vehicle
 //'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall/make-name/honda/model-name/accord/year-range/2014-2014?format=json
-async function GetRecallNumber(make, model, year) {
+async function GetRecallNumbers(make, model, year) {
   console.log("inside func");
   try {
     var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + "-" + year + SUFFIX;
     console.log(url);
     let res = await fetch(url)
     res = await res.json();
+    var recallList = [];
     console.log(util.inspect(res, { depth: null }));
-    var recallNumber = res.ResultSet[0][0]['Value']['Literal'];
-    console.log("returning recall # : " + recallNumber);
-    return recallNumber;
+
+    for (let index = 0; index < res.ResultSet.length; index++) {
+      for (let y = 0; y < res.ResultSet[index].length; y++) {
+        //const element = array[y];
+        console.log(res.ResultSet[index][y]["Name"])
+        if (res.ResultSet[index][y]["Name"] === "Recall number") {
+          console.log("found targeted object in array");
+          console.log("value found: " + res.ResultSet[index][y]["Value"]["Literal"]);
+          recallList.push(res.ResultSet[index][y]["Value"]["Literal"]);
+        }
+
+      }
+    }
+    console.log(recallList)
+    return recallList;
 
   } catch (error) {
     return 0;
@@ -62,28 +76,45 @@ async function GetRecallNumber(make, model, year) {
 
 //http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall-summary/recall-number/1977043?format=json
 async function GetRecallDetails(recallNumber) {
-  console.log("inside func");
   try {
     var url = HOST + PATH + RECALLSUM + RECALLNUMBER + recallNumber + SUFFIX;
     console.log(url)
 
-    let res = await fetch(url)
+    let res = await fetch(url);
     res = await res.json();
-    console.log(util.inspect(res, { depth: null }));
-    var count = res.ResultSet[0][0]['Value']['Literal'];
-    console.log("returning: " + count);
-    return count;
+    var vehicleInfo=[];
+
+
+
+    console.log(res);
+    for (let index = 0; index < res.ResultSet.length; index++) {
+      for (let y = 0; y < res.ResultSet[index].length; y++) {
+        //const element = array[y];
+        console.log(res.ResultSet[index][y]["SYSTEM_TYPE_ETXT"])
+        if (res.ResultSet[index][y]["Name"] === "SYSTEM_TYPE_ETXT") {
+          console.log("found targeted object in array");
+          console.log(res.ResultSet[index][y]);
+
+          console.log(res.ResultSet[index][y]["Value"]["Literal"]);
+          //vehicleInfo.push(res.ResultSet[index][y]["Value"]["Literal"]);
+          return res.ResultSet[index][y]["Value"]["Literal"];
+          //console.log("value found: " + res.ResultSet[index][y]["Value"]["Literal"]);
+        }
+
+      }
+    }
+
+
+    //return vehicleInfo;
 
   } catch (error) {
     return 0;
   }
 
 }
-
-
-
-
-
+console.log("getting recall numbers");
+//GetRecallNumbers("dodge", "charger", "2014");
+//GetRecallDetails("2017327");
 
 
 const LaunchRequestHandler = {
@@ -141,15 +172,22 @@ const CompletedSearchByVehicleIntentHandler = {
     var speechText = "Okay, I'll be looking for ";
     speechText += make + "," + model + "," + year;
     var count = await GetVehicleRecallCount(make, model, year);
+    var components =[];
 
-    if(count>1)
-    {
-      var recallNumber = GetRecallNumber(make,model,year);
-      GetRecallDetails(recallNumber);
+    if (count >= 1) {
+      var recallNumbers = await GetRecallNumbers(make, model, year);
+      //todo loop through all recall numbers
+
+      for (let i = 0; i < recallNumbers.length; i++) {
+        const targetedRecall = recallNumbers[i];
+        var details = await GetRecallDetails(targetedRecall)
+        components.push(details);
+      }
+
     }
 
-    console.log("before speach text: " + count);
-    speechText = "I found " + count + " recall" + (count > 1 ? "s" : "");
+    speechText = "I found " + count + " recall" + (count > 1 ? "s" : "") +" related to the " + components.join() 
+    + " component. You can say I want details on the " +components[0];
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Recalls Found', speechText)
@@ -158,37 +196,11 @@ const CompletedSearchByVehicleIntentHandler = {
 };
 
 
-const SearchByVehicleIntentHandler = {
-  canHandle(handlerInput) {
-    console.log("inside search vehicle intent handler")
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle';
-  },
-  handle(handlerInput) {
-    const speechText = 'Hello World!';
-
-    // console.log("inside vehicle handler");
-    // // // delegate to Alexa to collect all the required slots
-    // // let isTestingWithSimulator = true; //autofill slots when 
-    // // //using simulator, dialog management is only supported with a device
-    // let filledSlots = delegateSlotCollection.call(this);
-
-
-
-    // if (!filledSlots) {
-    //     return;
-    // }
-
-    return handlerInput.responseBuilder
-      .speak(speechText)
-      .withSimpleCard('Hello World', speechText)
-      .getResponse();
-  }
-};
 
 
 
 
+//REQUIRED ALEXA INTENTS
 
 const HelpIntentHandler = {
   canHandle(handlerInput) {
@@ -252,7 +264,6 @@ const skillBuilder = Alexa.SkillBuilders.custom();
 exports.handler = skillBuilder
   .addRequestHandlers(
     LaunchRequestHandler,
-    // SearchByVehicleIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler,
