@@ -16,6 +16,8 @@ const YEARRANGE = '/year-range/';
 const RECALLSUM = '/recall-summary/';
 const RECALLNUMBER = '/recall-number/';
 
+globalSpeechText = "";
+
 
 
 
@@ -82,7 +84,7 @@ async function GetRecallDetails(recallNumber) {
 
     let res = await fetch(url);
     res = await res.json();
-    var vehicleInfo=[];
+    var vehicleInfo = [];
 
 
 
@@ -153,6 +155,9 @@ const InProgressSearchByVehicleIntentHandler = {
   }
 };
 
+
+
+
 const CompletedSearchByVehicleIntentHandler = {
   canHandle(handlerInput) {
     console.log("dialog state: " + handlerInput.requestEnvelope.request.dialogState);
@@ -172,7 +177,7 @@ const CompletedSearchByVehicleIntentHandler = {
     var speechText = "Okay, I'll be looking for ";
     speechText += make + "," + model + "," + year;
     var count = await GetVehicleRecallCount(make, model, year);
-    var components =[];
+    var components = [];
 
     if (count >= 1) {
       var recallNumbers = await GetRecallNumbers(make, model, year);
@@ -186,17 +191,58 @@ const CompletedSearchByVehicleIntentHandler = {
 
     }
 
-    speechText = "I found " + count + " recall" + (count > 1 ? "s" : "") +" related to the " + components.join() 
-    + " component. You can say I want details on the " +components[0];
+
+
+    var plural = (count > 1 ? "s" : "")
+    let componentListPhrase = `${components.slice(0, -1).join(', ').toLowerCase()} and ${components.slice(-1)[0].toLowerCase()}`
+
+    if (count > 0) {
+      //arr.slice(0, -1).join(', ') + ', and ' + arr.slice(-1);
+      speechText = `I found ${count} recall${plural} for this vehicle related to the`
+        + componentListPhrase + `component${plural}. 
+      You can say repeat list or ask for details on the problem component
+      `
+    }
+    else {
+      speechText = `I found zero recalls related to the ${year} ${make} ${model}`;
+    }
+
+    globalSpeechText = componentListPhrase;
+
+    //commenting out this for now, because it can be to lengthy for alexa to speak
+    // for (let i = 0; i < components.length; i++) {
+    //   if (i === 0) {
+    //     speechText += `You can say I want details on the ${components[i].toLowerCase()} component.`;
+    //   }
+    //   else {
+    //     speechText += ` Or you can say I want details on the ${components[i].toLowerCase()} component.`;
+
+    //   }
+    // }
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Recalls Found', speechText)
+      .withShouldEndSession(false)
       .getResponse();
   }
 };
 
 
+const RepeatComponentListIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'RepeatComponentListIntent';
+  },
+  handle(handlerInput) {
+    const speechText = globalSpeechText;
 
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(speechText)
+      .withSimpleCard('Hello World', speechText)
+      .getResponse();
+  },
+};
 
 
 
@@ -268,7 +314,8 @@ exports.handler = skillBuilder
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler,
     InProgressSearchByVehicleIntentHandler,
-    CompletedSearchByVehicleIntentHandler
+    CompletedSearchByVehicleIntentHandler,
+    RepeatComponentListIntentHandler
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();

@@ -20,6 +20,10 @@
           "samples": []
         },
         {
+          "name": "RepeatComponentListIntent",
+          "samples": ["repeat","repeat list"]
+        },
+        {
           "name": "SearchByVehicle",
           "slots": [
             {
