@@ -24,15 +24,15 @@ globalSpeechText = "";
 
 //'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall/make-name/honda/model-name/accord/year-range/2014-2014/count?format=json
 async function GetVehicleRecallCount(make, model, year) {
-  console.log("inside func");
+  console.log('inside func');
   try {
-    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + "-" + year + COUNT + SUFFIX;
+    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + '-' + year + COUNT + SUFFIX;
     console.log(url);
     let res = await fetch(url)
     res = await res.json();
     console.log(util.inspect(res, { depth: null }));
     var count = res.ResultSet[0][0]['Value']['Literal'];
-    console.log("returning: " + count);
+    console.log('returning: ' + count);
     return count;
 
   } catch (error) {
@@ -44,9 +44,9 @@ async function GetVehicleRecallCount(make, model, year) {
 //todo fix, could return several recalls asscoiated to the vehicle
 //'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database/recall/make-name/honda/model-name/accord/year-range/2014-2014?format=json
 async function GetRecallNumbers(make, model, year) {
-  console.log("inside func");
+  console.log('inside func');
   try {
-    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + "-" + year + SUFFIX;
+    var url = HOST + PATH + RECALL + MAKENAME + make + MODELNAME + model + YEARRANGE + year + '-' + year + SUFFIX;
     console.log(url);
     let res = await fetch(url)
     res = await res.json();
@@ -55,12 +55,13 @@ async function GetRecallNumbers(make, model, year) {
 
     for (let index = 0; index < res.ResultSet.length; index++) {
       for (let y = 0; y < res.ResultSet[index].length; y++) {
-        //const element = array[y];
-        console.log(res.ResultSet[index][y]["Name"])
-        if (res.ResultSet[index][y]["Name"] === "Recall number") {
-          console.log("found targeted object in array");
-          console.log("value found: " + res.ResultSet[index][y]["Value"]["Literal"]);
-          recallList.push(res.ResultSet[index][y]["Value"]["Literal"]);
+
+        console.log(res.ResultSet[index][y]['Name'])
+
+        if (res.ResultSet[index][y]['Name'] === 'Recall number') {
+          console.log('found targeted object in array');
+          console.log('value found: ' + res.ResultSet[index][y]['Value']['Literal']);
+          recallList.push(res.ResultSet[index][y]['Value']['Literal']);
         }
 
       }
@@ -92,15 +93,13 @@ async function GetRecallDetails(recallNumber) {
     for (let index = 0; index < res.ResultSet.length; index++) {
       for (let y = 0; y < res.ResultSet[index].length; y++) {
         //const element = array[y];
-        console.log(res.ResultSet[index][y]["SYSTEM_TYPE_ETXT"])
-        if (res.ResultSet[index][y]["Name"] === "SYSTEM_TYPE_ETXT") {
-          console.log("found targeted object in array");
+        console.log(res.ResultSet[index][y]['SYSTEM_TYPE_ETXT'])
+        if (res.ResultSet[index][y]['Name'] === 'SYSTEM_TYPE_ETXT') {
+          console.log('found targeted object in array');
           console.log(res.ResultSet[index][y]);
 
-          console.log(res.ResultSet[index][y]["Value"]["Literal"]);
-          //vehicleInfo.push(res.ResultSet[index][y]["Value"]["Literal"]);
-          return res.ResultSet[index][y]["Value"]["Literal"];
-          //console.log("value found: " + res.ResultSet[index][y]["Value"]["Literal"]);
+          console.log(res.ResultSet[index][y]['Value']['Literal']);
+          return res.ResultSet[index][y]['Value']['Literal'];
         }
 
       }
@@ -114,9 +113,9 @@ async function GetRecallDetails(recallNumber) {
   }
 
 }
-console.log("getting recall numbers");
-//GetRecallNumbers("dodge", "charger", "2014");
-//GetRecallDetails("2017327");
+console.log('getting recall numbers');
+//GetRecallNumbers('dodge', 'charger', '2014');
+//GetRecallDetails('2017327');
 
 
 const LaunchRequestHandler = {
@@ -124,7 +123,7 @@ const LaunchRequestHandler = {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const userOptions = " You can say search by vehicle";
+    const userOptions = ' You can say search by vehicle';
 
     var speechText = 'Welcome to Transport Canada, I can inform you  about vehicle recalls.';
     speechText += userOptions;
@@ -132,7 +131,7 @@ const LaunchRequestHandler = {
     return handlerInput.responseBuilder
       .speak(speechText)
       .reprompt(userOptions)
-      .withSimpleCard('Search Options', "Search by vehicle")
+      .withSimpleCard('Search Options', 'Search by vehicle')
       .getResponse();
   },
 };
@@ -140,14 +139,14 @@ const LaunchRequestHandler = {
 
 const InProgressSearchByVehicleIntentHandler = {
   canHandle(handlerInput) {
-    console.log("dialog state: " + handlerInput.requestEnvelope.request.dialogState);
+    console.log('dialog state: ' + handlerInput.requestEnvelope.request.dialogState);
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
       && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle'
       && handlerInput.requestEnvelope.request.dialogState !== 'COMPLETED';
 
   },
   async handle(handlerInput) {
-    console.log("inside in progress handle")
+    console.log('inside in progress handle')
 
     return handlerInput.responseBuilder
       .addDelegateDirective(handlerInput.requestEnvelope.request.intent) // makes alexa prompt for required slots.
@@ -160,32 +159,32 @@ const InProgressSearchByVehicleIntentHandler = {
 
 const CompletedSearchByVehicleIntentHandler = {
   canHandle(handlerInput) {
-    console.log("dialog state: " + handlerInput.requestEnvelope.request.dialogState);
+    console.log('dialog state: ' + handlerInput.requestEnvelope.request.dialogState);
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
       && handlerInput.requestEnvelope.request.intent.name === 'SearchByVehicle'
       && handlerInput.requestEnvelope.request.dialogState === 'COMPLETED';
 
   },
   async handle(handlerInput) {
-    console.log("inside in completed")
+    console.log('inside in completed')
     const currentIntent = handlerInput.requestEnvelope.request.intent;
 
-    var make = currentIntent.slots['Make'].value;
-    var model = currentIntent.slots['Model'].value;
-    var year = currentIntent.slots['Year'].value;
+    let make = currentIntent.slots['Make'].value;
+    let model = currentIntent.slots['Model'].value;
+    let year = currentIntent.slots['Year'].value;
 
-    var speechText = "Okay, I'll be looking for ";
-    speechText += make + "," + model + "," + year;
-    var count = await GetVehicleRecallCount(make, model, year);
-    var components = [];
+    let speechText = '';
+    speechText += make + ',' + model + ',' + year;
+    let count = await GetVehicleRecallCount(make, model, year);
+    let components = [];
 
     if (count >= 1) {
-      var recallNumbers = await GetRecallNumbers(make, model, year);
+      let recallNumbers = await GetRecallNumbers(make, model, year);
       //todo loop through all recall numbers
 
       for (let i = 0; i < recallNumbers.length; i++) {
         const targetedRecall = recallNumbers[i];
-        var details = await GetRecallDetails(targetedRecall)
+        let details = await GetRecallDetails(targetedRecall)
         components.push(details);
       }
 
@@ -193,13 +192,14 @@ const CompletedSearchByVehicleIntentHandler = {
 
 
 
-    var plural = (count > 1 ? "s" : "")
-    let componentListPhrase = `${components.slice(0, -1).join(', ').toLowerCase()} and ${components.slice(-1)[0].toLowerCase()}`
+    //todo add a i dont know slot value for year
+
+    let plural = (count > 1 ? 's' : '')
+    let componentListPhrase = `${components.slice(0, -1).join(', ').toLowerCase()}${(count > 1 ? ' and ' : '')}${components.slice(-1)[0].toLowerCase()}`
 
     if (count > 0) {
-      //arr.slice(0, -1).join(', ') + ', and ' + arr.slice(-1);
-      speechText = `I found ${count} recall${plural} for this vehicle related to the`
-        + componentListPhrase + `component${plural}. 
+      speechText = `I found ${count} recall${plural} for this vehicle related to the `
+        + componentListPhrase + ` component${plural}. 
       You can say repeat list or ask for details on the problem component
       `
     }
@@ -209,16 +209,7 @@ const CompletedSearchByVehicleIntentHandler = {
 
     globalSpeechText = componentListPhrase;
 
-    //commenting out this for now, because it can be to lengthy for alexa to speak
-    // for (let i = 0; i < components.length; i++) {
-    //   if (i === 0) {
-    //     speechText += `You can say I want details on the ${components[i].toLowerCase()} component.`;
-    //   }
-    //   else {
-    //     speechText += ` Or you can say I want details on the ${components[i].toLowerCase()} component.`;
-
-    //   }
-    // }
+ 
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Recalls Found', speechText)
